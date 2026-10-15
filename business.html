@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>সহজ ব্যবসার হিসাব</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f0f4f8;color:#172033;padding:18px}
+header{background:#123b35;color:white;padding:22px;border-radius:18px}
+h1{font-size:25px;margin:0 0 8px}
+.cards{display:flex;gap:10px;margin:18px 0}
+.card{background:white;padding:15px;border-radius:14px;flex:1;box-shadow:0 2px 8px #0001}
+.amount{font-size:20px;font-weight:bold;margin-top:10px;overflow-wrap:anywhere}
+input,select,button{box-sizing:border-box;width:100%;padding:13px;margin:6px 0;border-radius:10px;border:1px solid #ccd5df;font-size:16px}
+button{background:#087f65;color:white;border:0;font-weight:bold}
+.entry{background:white;padding:13px;margin:8px 0;border-radius:12px}
+small{color:#586579}
+</style>
+</head>
+<body>
+<header>
+<h1>সহজ ব্যবসার হিসাব</h1>
+<p>আপনার ব্যবসার আয়-ব্যয় রাখুন সহজে</p>
+</header>
+<div class="cards">
+<div class="card">মোট আয়<div class="amount" id="income">৳০</div></div>
+<div class="card">মোট খরচ<div class="amount" id="expense">৳০</div></div>
+</div>
+<div class="card">
+<b>নতুন হিসাব যোগ করুন</b>
+<input id="note" placeholder="বিবরণ (যেমন: পণ্য বিক্রি)">
+<input id="amount" type="number" min="0.01" step="0.01" placeholder="টাকার পরিমাণ">
+<select id="type">
+<option value="income">আয়</option>
+<option value="expense">খরচ</option>
+</select>
+<button onclick="addEntry()">হিসাব যোগ করুন</button>
+</div>
+<div class="card" style="margin-top:15px">
+<b>বর্তমান লাভ / ক্ষতি</b>
+<div class="amount" id="profit">৳০</div>
+</div>
+<h3>আগের হিসাব</h3>
+<div id="history"></div>
+<script>
+let entries=[];
+try{entries=JSON.parse(localStorage.getItem("businessEntries")||"[]")}catch(e){}
+function money(n){return "৳"+n.toLocaleString("bn-BD",{maximumFractionDigits:2})}
+function render(){
+let inc=entries.filter(e=>e.type==="income").reduce((s,e)=>s+e.amount,0);
+let exp=entries.filter(e=>e.type==="expense").reduce((s,e)=>s+e.amount,0);
+document.getElementById("income").textContent=money(inc);
+document.getElementById("expense").textContent=money(exp);
+document.getElementById("profit").textContent=money(inc-exp);
+document.getElementById("history").innerHTML=entries.slice().reverse().map(e=>
+'<div class="entry"><b>'+escapeText(e.note)+'</b><br>'+e.typeLabel+
+'<div class="amount">'+money(e.amount)+'</div><small>'+escapeText(e.date)+'</small></div>'
+).join("")||"<p>এখনো কোনো হিসাব যোগ করা হয়নি।</p>";
+}
+function escapeText(s){let d=document.createElement("div");d.textContent=s;return d.innerHTML}
+function addEntry(){
+let note=document.getElementById("note").value.trim();
+let amount=Number(document.getElementById("amount").value);
+let type=document.getElementById("type").value;
+if(!note||!Number.isFinite(amount)||amount<=0){alert("বিবরণ ও সঠিক টাকার পরিমাণ লিখুন।");return}
+entries.push({note,amount,type,typeLabel:type==="income"?"আয়":"খরচ",date:new Date().toLocaleString("bn-BD")});
+try{localStorage.setItem("businessEntries",JSON.stringify(entries))}
+catch(e){alert("হিসাব সেভ করা যায়নি। ব্রাউজারের জায়গা পরীক্ষা করুন।")}
+document.getElementById("note").value="";
+document.getElementById("amount").value="";
+render();
+}
+render();
+</script>
+</body>
+</html>
